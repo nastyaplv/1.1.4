@@ -13,19 +13,19 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void createUsersTable() {
-        try (Connection connection = (new Util()).getConnection(); Statement statement = connection.createStatement()) {
+        String sql = "CREATE TABLE `users`.`users` (\n" +
+                "  `id` BIGINT NOT NULL AUTO_INCREMENT,\n" +
+                "  `name` VARCHAR(45) NOT NULL,\n" +
+                "  `lastName` VARCHAR(45) NOT NULL,\n" +
+                "  `age` TINYINT NOT NULL,\n" +
+                "  PRIMARY KEY (`id`))";
+        try (Connection connection = (new Util()).getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             DatabaseMetaData metaData = connection.getMetaData();
             ResultSet res = metaData.getTables("users", null, "users", null);
             if (res.next()) {
                 System.out.println("Таблица с таким название уже существует");
             } else {
-                String sql = "CREATE TABLE `users`.`users` (\n" +
-                        "  `id` BIGINT NOT NULL AUTO_INCREMENT,\n" +
-                        "  `name` VARCHAR(45) NOT NULL,\n" +
-                        "  `lastName` VARCHAR(45) NOT NULL,\n" +
-                        "  `age` TINYINT NOT NULL,\n" +
-                        "  PRIMARY KEY (`id`))";
-                statement.executeUpdate(sql);
+                preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -34,11 +34,11 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void dropUsersTable() {
         String sql = "DROP TABLE `users`.`users`";
-        try (Connection connection = (new Util()).getConnection(); Statement statement = connection.createStatement()) {
+        try (Connection connection = (new Util()).getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             DatabaseMetaData metaData = connection.getMetaData();
             ResultSet res = metaData.getTables("users", null, "users", null);
             if (res.next()) {
-                statement.executeUpdate(sql);
+                preparedStatement.executeUpdate();
             } else {
                 System.out.println("Таблицы users не существует");
             }
@@ -73,9 +73,9 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         String sql = "select * from users";
-        try (Connection connection = (new Util()).getConnection(); Statement statement = connection.createStatement()) {
-            if (statement.execute(sql)) {
-                ResultSet resultSet = statement.getResultSet();
+        try (Connection connection = (new Util()).getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            if (preparedStatement.execute()) {
+                ResultSet resultSet = preparedStatement.getResultSet();
                 List<User> list = new ArrayList<>();
                 while (resultSet.next()) {
                     list.add(new User(resultSet.getString(2), resultSet.getString(3), resultSet.getByte(4)));
@@ -91,8 +91,8 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void cleanUsersTable() {
         String sql = "delete from users";
-        try (Connection connection = (new Util()).getConnection(); Statement statement = connection.createStatement()) {
-            statement.executeUpdate(sql);
+        try (Connection connection = (new Util()).getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
